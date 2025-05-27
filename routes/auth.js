@@ -2,15 +2,58 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const rateLimit = require('express-rate-limit');
+const { body, validationResult } = require('express-validator');
 
 const router = express.Router();
 
+// Rate limiting
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5 // limit each IP to 5 requests per windowMs
+});
+
+// Input validation middleware
+const validateRegistration = [
+    body('username')
+        .trim()
+        .isLength({ min: 3, max: 20 })
+        .matches(/^[a-zA-Z0-9_]+$/)
+        .withMessage('Username must be 3-20 characters and contain only letters, numbers, and underscores'),
+    body('email')
+        .trim()
+        .isEmail()
+        .normalizeEmail()
+        .withMessage('Please enter a valid email'),
+    body('password')
+        .isLength({ min: 8 })
+        .matches(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/)
+        .withMessage('Password must be at least 8 characters long and contain at least one letter and one number')
+];
+
+const validateLogin = [
+    body('username')
+        .trim()
+        .isLength({ min: 3, max: 20 })
+        .matches(/^[a-zA-Z0-9_]+$/)
+        .withMessage('Invalid username format'),
+    body('password')
+        .isLength({ min: 8 })
+        .withMessage('Invalid password format')
+];
+
 // Register new user
-router.post('/register', async (req, res) => {
+router.post('/register', validateRegistration, async (req, res) => {
     try {
+        // Check for validation errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
         const { username, email, password } = req.body;
 
-        // Check if user already exists in 'users' collection
+        // Check if user already exists
         const existingUser = await User.findOne({ 
             $or: [{ email }, { username }] 
         });
@@ -21,7 +64,7 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        // Create new user in 'users' collection
+        // Create new user
         const user = new User({
             username,
             email,
@@ -52,11 +95,17 @@ router.post('/register', async (req, res) => {
 });
 
 // Login user
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, validateLogin, async (req, res) => {
     try {
+        // Check for validation errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
         const { username, password } = req.body;
 
-        // Find user in 'users' collection
+        // Find user
         const user = await User.findOne({ username });
         if (!user) {
             return res.status(401).json({ message: 'Invalid credentials' });
