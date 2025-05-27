@@ -5,11 +5,8 @@ services:
     build: .
     ports:
       - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - MONGODB_URI=mongodb://mongo:27017/your_database
-      - JWT_SECRET=your_jwt_secret
-      - CORS_ORIGIN=https://eloquent-jelly-bf2ecd.netlify.app,https://statsflow.online
+    env_file:
+      - .env
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
