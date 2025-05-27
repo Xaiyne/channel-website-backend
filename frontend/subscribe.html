@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscribe - Our Service</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">Our Service</div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="login.html">Login</a>
+                <a href="subscribe.html" class="active">Subscribe</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="subscribe-container">
+            <div id="loginPrompt" class="subscribe-box">
+                <h2>Subscribe to Our Service</h2>
+                <p>Please login to continue with your subscription</p>
+                <a href="login.html" class="btn-primary">Login</a>
+            </div>
+
+            <div id="subscriptionOptions" class="subscribe-box hidden">
+                <h2>Choose Your Plan</h2>
+                <div class="plan-cards">
+                    <div class="plan-card">
+                        <h3>Basic Plan</h3>
+                        <p class="price">$9.99/month</p>
+                        <ul>
+                            <li>Feature 1</li>
+                            <li>Feature 2</li>
+                            <li>Feature 3</li>
+                        </ul>
+                        <button class="btn-primary" data-plan="basic">Select Plan</button>
+                    </div>
+                    <div class="plan-card featured">
+                        <h3>Premium Plan</h3>
+                        <p class="price">$19.99/month</p>
+                        <ul>
+                            <li>All Basic Features</li>
+                            <li>Premium Feature 1</li>
+                            <li>Premium Feature 2</li>
+                            <li>Premium Feature 3</li>
+                        </ul>
+                        <button class="btn-primary" data-plan="premium">Select Plan</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="paymentForm" class="subscribe-box hidden">
+                <h2>Payment Details</h2>
+                <form id="payment-form">
+                    <div id="card-element"></div>
+                    <div id="card-errors" role="alert"></div>
+                    <button type="submit" class="btn-primary">Subscribe Now</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Our Service. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html> 
