@@ -2,7 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const https = require('https');
 const fs = require('fs');
-const path = require('path');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const securityMiddleware = require('./middleware/security');
@@ -25,8 +24,8 @@ app.use(requestLogger);
 
 // SSL configuration
 const sslOptions = {
-    key: fs.readFileSync('/etc/letsencrypt/live/157.245.139.25/privkey.pem'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/157.245.139.25/fullchain.pem')
+    key: fs.readFileSync('/etc/letsencrypt/live/api.statsflow.online/privkey.pem'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/api.statsflow.online/fullchain.pem')
 };
 
 // Create HTTPS server
@@ -43,7 +42,7 @@ mongoose.connect(process.env.MONGODB_URI, {
     logger.info('Connected to MongoDB');
     // Start server
     server.listen(3000, () => {
-        logger.info('Server running on https://157.245.139.25:3000');
+        logger.info('Server running on https://api.statsflow.online:3000');
     });
 })
 .catch(err => {
