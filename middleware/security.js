@@ -31,8 +31,8 @@ const securityMiddleware = (app) => {
     // Enable CORS
     app.use(cors({
         origin: [
-            'https://eloquent-jelly-bf2ecd.netlify.app',
             'https://statsflow.online',
+            'https://api.statsflow.online:3000',
             'http://localhost:3000' // For development
         ],
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
