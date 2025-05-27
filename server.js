@@ -34,9 +34,7 @@ const server = https.createServer(sslOptions, app);
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useCreateIndex: true,
-    useFindAndModify: false
+    useUnifiedTopology: true
 })
 .then(() => {
     logger.info('Connected to MongoDB');
