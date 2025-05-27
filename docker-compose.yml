@@ -9,7 +9,9 @@ services:
       - NODE_ENV=production
       - MONGODB_URI=mongodb://mongo:27017/your_database
       - JWT_SECRET=your_jwt_secret
-      - CORS_ORIGIN=https://your-netlify-app.netlify.app
+      - CORS_ORIGIN=https://eloquent-jelly-bf2ecd.netlify.app,https://statsflow.online
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - mongo
     restart: always

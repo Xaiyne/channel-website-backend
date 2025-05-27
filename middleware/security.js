@@ -30,8 +30,15 @@ const securityMiddleware = (app) => {
 
     // Enable CORS
     app.use(cors({
-        origin: process.env.CORS_ORIGIN,
-        credentials: true
+        origin: [
+            'https://eloquent-jelly-bf2ecd.netlify.app',
+            'https://statsflow.online',
+            'http://localhost:3000' // For development
+        ],
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        credentials: true,
+        maxAge: 86400 // 24 hours
     }));
 };
 
