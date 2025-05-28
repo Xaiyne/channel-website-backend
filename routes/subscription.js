@@ -5,10 +5,12 @@ const auth = require('../middleware/auth');
 
 // Check required environment variables
 if (!process.env.STRIPE_SECRET_KEY) {
-    console.error('STRIPE_SECRET_KEY is not set in environment variables');
+    console.error('ERROR: STRIPE_SECRET_KEY is not set in environment variables');
+    process.exit(1);
 }
 if (!process.env.FRONTEND_URL) {
-    console.error('FRONTEND_URL is not set in environment variables');
+    console.error('ERROR: FRONTEND_URL is not set in environment variables');
+    process.exit(1);
 }
 
 const router = express.Router();
@@ -169,6 +171,11 @@ router.post('/create-checkout-session', auth, async (req, res) => {
         console.log('Creating checkout session for plan:', plan);
         console.log('User from request:', req.user);
 
+        if (!plan) {
+            console.error('No plan specified in request');
+            return res.status(400).json({ message: 'Plan is required' });
+        }
+
         const user = await User.findById(req.user._id);
         console.log('Found user:', user);
 
@@ -182,6 +189,11 @@ router.post('/create-checkout-session', auth, async (req, res) => {
             monthly: 'price_1RSuKXL6G7tKq6vSssB7jpQM', // Monthly plan: $19.99/month
             yearly: 'price_1RTZOWL6G7tKq6vSwY0SBVGa' // Yearly plan: $179/year ($15/month)
         };
+
+        if (!priceIds[plan]) {
+            console.error('Invalid plan specified:', plan);
+            return res.status(400).json({ message: 'Invalid plan specified' });
+        }
 
         // Create or get Stripe customer
         let customer;
@@ -229,7 +241,8 @@ router.post('/create-checkout-session', auth, async (req, res) => {
         console.error('Error stack:', error.stack);
         res.status(500).json({ 
             message: 'Error creating checkout session',
-            error: error.message 
+            error: error.message,
+            details: error.stack
         });
     }
 });
