@@ -187,7 +187,8 @@ router.post('/create-checkout-session', auth, async (req, res) => {
         // Define price IDs for your plans
         const priceIds = {
             monthly: 'price_1RSuKXL6G7tKq6vSssB7jpQM', // Monthly plan: $19.99/month
-            yearly: 'price_1RTZOWL6G7tKq6vSwY0SBVGa' // Yearly plan: $179/year ($15/month)
+            yearly: 'price_1RTZOWL6G7tKq6vSwY0SBVGa', // Yearly plan: $179/year ($15/month)
+            lifetime: 'price_1RTcUZL6G7tKq6vSUaORxB2E' // Test product: $1/month
         };
 
         if (!priceIds[plan]) {
