@@ -158,7 +158,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 router.post('/create-checkout-session', auth, async (req, res) => {
     try {
         const { plan } = req.body;
-        const user = await User.findById(req.user.userId);
+        const user = await User.findById(req.user._id);
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
