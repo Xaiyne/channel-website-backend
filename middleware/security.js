@@ -29,12 +29,13 @@ const securityMiddleware = (app) => {
     app.use(hpp());
 
     // Enable CORS
+    const allowedOrigins = [
+        'https://statsflow.online',
+        'https://api.statsflow.online:443',
+        'http://localhost:443' // For development
+    ];
     app.use(cors({
-        origin: [
-            'https://statsflow.online',
-            'https://api.statsflow.online:3000',
-            'http://localhost:3000' // For development
-        ],
+        origin: allowedOrigins,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],
         credentials: true,

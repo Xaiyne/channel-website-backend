@@ -1,26 +1,28 @@
-# Channel Website Backend
+# Backend Server
 
-Backend server for the Channel Website application.
+## Environment Variables
+Create a `.env` file in the root directory with the following variables:
 
-## Setup
+```
+PORT=443
+MONGODB_URI=your_mongodb_uri
+JWT_SECRET=your_jwt_secret
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+FRONTEND_URL=https://statsflow.online
+```
 
-1. Install dependencies:
+## Installation
 ```bash
 npm install
 ```
 
-2. Create a `.env` file with the following variables:
-```
-PORT=3000
-MONGODB_URI=mongodb://localhost:27017/your_database
-JWT_SECRET=your_secret_key
-CORS_ORIGIN=https://your-netlify-app.netlify.app
-```
-
-3. Start the server:
+## Running the Server
 ```bash
 npm start
 ```
+
+The server will run on https://api.statsflow.online:443
 
 ## Development
 
