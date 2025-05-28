@@ -4,7 +4,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const User = require('../models/User');
 
 // Stripe webhook endpoint
-router.post('/stripe', express.raw({type: 'application/json'}), async (req, res) => {
+router.post('/stripe', async (req, res) => {
     const sig = req.headers['stripe-signature'];
     let event;
 
