@@ -113,56 +113,6 @@ router.get('/status', auth, async (req, res) => {
     }
 });
 
-// Webhook handler for Stripe events
-router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-    const sig = req.headers['stripe-signature'];
-
-    try {
-        const event = stripe.webhooks.constructEvent(
-            req.body,
-            sig,
-            process.env.STRIPE_WEBHOOK_SECRET
-        );
-
-        // Handle the event
-        switch (event.type) {
-            case 'customer.subscription.deleted':
-                const subscription = event.data.object;
-                const user = await User.findOne({ 
-                    stripeCustomerId: subscription.customer 
-                });
-                
-                if (user) {
-                    user.subscriptionStatus = 'none';
-                    user.subscriptionEndDate = null;
-                    await user.save();
-                }
-                break;
-            
-            case 'customer.subscription.updated':
-            case 'customer.subscription.created':
-                const updatedSubscription = event.data.object;
-                const updatedUser = await User.findOne({ 
-                    stripeCustomerId: updatedSubscription.customer 
-                });
-                
-                if (updatedUser) {
-                    // Set subscription status to 'subscribed' for all active subscriptions
-                    updatedUser.subscriptionStatus = 'subscribed';
-                    updatedUser.subscriptionEndDate = new Date(
-                        updatedSubscription.current_period_end * 1000
-                    );
-                    await updatedUser.save();
-                }
-                break;
-        }
-
-        res.json({ received: true });
-    } catch (error) {
-        res.status(400).send(`Webhook Error: ${error.message}`);
-    }
-});
-
 // Create a Stripe Checkout session
 router.post('/create-checkout-session', auth, async (req, res) => {
     try {
