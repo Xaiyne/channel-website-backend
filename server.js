@@ -9,6 +9,7 @@ const requestLogger = require('./middleware/requestLogger');
 const logger = require('./utils/logger');
 const authRoutes = require('./routes/auth');
 const subscriptionRoutes = require('./routes/subscription');
+const webhookRoutes = require('./routes/webhook');
 
 const app = express();
 
@@ -51,6 +52,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/webhook', webhookRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
