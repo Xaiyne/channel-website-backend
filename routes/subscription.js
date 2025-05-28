@@ -3,6 +3,14 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 
+// Check required environment variables
+if (!process.env.STRIPE_SECRET_KEY) {
+    console.error('STRIPE_SECRET_KEY is not set in environment variables');
+}
+if (!process.env.FRONTEND_URL) {
+    console.error('FRONTEND_URL is not set in environment variables');
+}
+
 const router = express.Router();
 
 // Create Stripe customer
@@ -158,9 +166,14 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 router.post('/create-checkout-session', auth, async (req, res) => {
     try {
         const { plan } = req.body;
+        console.log('Creating checkout session for plan:', plan);
+        console.log('User from request:', req.user);
+
         const user = await User.findById(req.user._id);
+        console.log('Found user:', user);
 
         if (!user) {
+            console.log('User not found with ID:', req.user._id);
             return res.status(404).json({ message: 'User not found' });
         }
 
@@ -173,8 +186,10 @@ router.post('/create-checkout-session', auth, async (req, res) => {
         // Create or get Stripe customer
         let customer;
         if (user.stripeCustomerId) {
+            console.log('Using existing Stripe customer:', user.stripeCustomerId);
             customer = user.stripeCustomerId;
         } else {
+            console.log('Creating new Stripe customer for user:', user.email);
             const stripeCustomer = await stripe.customers.create({
                 email: user.email,
                 metadata: {
@@ -184,9 +199,11 @@ router.post('/create-checkout-session', auth, async (req, res) => {
             customer = stripeCustomer.id;
             user.stripeCustomerId = customer;
             await user.save();
+            console.log('Created new Stripe customer:', customer);
         }
 
         // Create checkout session
+        console.log('Creating Stripe checkout session for customer:', customer);
         const session = await stripe.checkout.sessions.create({
             customer: customer,
             payment_method_types: ['card'],
@@ -205,10 +222,15 @@ router.post('/create-checkout-session', auth, async (req, res) => {
             }
         });
 
+        console.log('Created checkout session:', session.id);
         res.json({ url: session.url });
     } catch (error) {
         console.error('Error creating checkout session:', error);
-        res.status(500).json({ message: 'Error creating checkout session' });
+        console.error('Error stack:', error.stack);
+        res.status(500).json({ 
+            message: 'Error creating checkout session',
+            error: error.message 
+        });
     }
 });
 
