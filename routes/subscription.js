@@ -140,16 +140,15 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
                 break;
             
             case 'customer.subscription.updated':
+            case 'customer.subscription.created':
                 const updatedSubscription = event.data.object;
                 const updatedUser = await User.findOne({ 
                     stripeCustomerId: updatedSubscription.customer 
                 });
                 
                 if (updatedUser) {
-                    updatedUser.subscriptionStatus = 
-                        updatedSubscription.items.data[0].price.id.includes('premium') 
-                            ? 'premium' 
-                            : 'basic';
+                    // Set subscription status to 'subscribed' for all active subscriptions
+                    updatedUser.subscriptionStatus = 'subscribed';
                     updatedUser.subscriptionEndDate = new Date(
                         updatedSubscription.current_period_end * 1000
                     );
