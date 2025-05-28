@@ -154,4 +154,62 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
     }
 });
 
+// Create a Stripe Checkout session
+router.post('/create-checkout-session', auth, async (req, res) => {
+    try {
+        const { plan } = req.body;
+        const user = await User.findById(req.user.userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Define price IDs for your plans
+        const priceIds = {
+            monthly: 'price_1RSuKXL6G7tKq6vSssB7jpQM', // Monthly plan: $19.99/month
+            yearly: 'price_1RTZOWL6G7tKq6vSwY0SBVGa' // Yearly plan: $179/year ($15/month)
+        };
+
+        // Create or get Stripe customer
+        let customer;
+        if (user.stripeCustomerId) {
+            customer = user.stripeCustomerId;
+        } else {
+            const stripeCustomer = await stripe.customers.create({
+                email: user.email,
+                metadata: {
+                    userId: user._id.toString()
+                }
+            });
+            customer = stripeCustomer.id;
+            user.stripeCustomerId = customer;
+            await user.save();
+        }
+
+        // Create checkout session
+        const session = await stripe.checkout.sessions.create({
+            customer: customer,
+            payment_method_types: ['card'],
+            line_items: [
+                {
+                    price: priceIds[plan],
+                    quantity: 1,
+                },
+            ],
+            mode: 'subscription',
+            success_url: `${process.env.FRONTEND_URL}/success.html?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${process.env.FRONTEND_URL}/subscribe.html`,
+            metadata: {
+                userId: user._id.toString(),
+                plan: plan
+            }
+        });
+
+        res.json({ url: session.url });
+    } catch (error) {
+        console.error('Error creating checkout session:', error);
+        res.status(500).json({ message: 'Error creating checkout session' });
+    }
+});
+
 module.exports = router; 
