@@ -13,6 +13,16 @@ const webhookRoutes = require('./routes/webhook');
 
 const app = express();
 
+// Security headers middleware
+app.use((req, res, next) => {
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Content-Security-Policy', "default-src 'self' https: 'unsafe-inline' 'unsafe-eval'; img-src 'self' https: data:; connect-src 'self' https: wss:;");
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    next();
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '10kb' }));
