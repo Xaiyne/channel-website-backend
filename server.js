@@ -28,9 +28,20 @@ app.use(cors({
     origin: ['https://statsflow.online', 'http://localhost:3000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'Stripe-Signature']
 }));
-app.use(express.json({ limit: '10kb' }));
+
+// Special handling for Stripe webhooks
+app.use('/api/webhook/stripe', express.raw({ type: 'application/json' }));
+
+// Regular JSON parsing for all other routes
+app.use((req, res, next) => {
+    if (req.originalUrl === '/api/webhook/stripe') {
+        next();
+    } else {
+        express.json({ limit: '10kb' })(req, res, next);
+    }
+});
 
 // Security middleware
 securityMiddleware(app);
@@ -61,7 +72,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 .then(() => {
     logger.info('Connected to MongoDB');
     // Start server
-    const port = process.env.PORT || 3000;
+    const port = process.env.PORT || 443;
     server.listen(port, () => {
         logger.info(`Server running on https://api.statsflow.online:${port}`);
     });
