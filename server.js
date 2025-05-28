@@ -25,8 +25,10 @@ app.use((req, res, next) => {
 
 // Middleware
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'https://statsflow.online',
-    credentials: true
+    origin: ['https://statsflow.online', 'http://localhost:3000'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '10kb' }));
 
@@ -37,10 +39,16 @@ securityMiddleware(app);
 app.use(requestLogger);
 
 // SSL configuration
-const sslOptions = {
-    key: fs.readFileSync('/etc/letsencrypt/live/api.statsflow.online/privkey.pem'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/api.statsflow.online/fullchain.pem')
-};
+let sslOptions;
+try {
+    sslOptions = {
+        key: fs.readFileSync(process.env.SSL_KEY_PATH || '/etc/letsencrypt/live/api.statsflow.online/privkey.pem'),
+        cert: fs.readFileSync(process.env.SSL_CERT_PATH || '/etc/letsencrypt/live/api.statsflow.online/fullchain.pem')
+    };
+} catch (error) {
+    logger.error('Error loading SSL certificates:', error);
+    process.exit(1);
+}
 
 // Create HTTPS server
 const server = https.createServer(sslOptions, app);
@@ -53,8 +61,9 @@ mongoose.connect(process.env.MONGODB_URI, {
 .then(() => {
     logger.info('Connected to MongoDB');
     // Start server
-    server.listen(3000, () => {
-        logger.info('Server running on https://api.statsflow.online:3000');
+    const port = process.env.PORT || 3000;
+    server.listen(port, () => {
+        logger.info(`Server running on https://api.statsflow.online:${port}`);
     });
 })
 .catch(err => {
