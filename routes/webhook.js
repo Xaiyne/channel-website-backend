@@ -3,8 +3,8 @@ const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const logger = require('../utils/logger');
 
-// Stripe webhook endpoint
-router.post('/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+// Stripe webhook endpoint - note: no /stripe in path since it's in the base route
+router.post('/', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     
     logger.info('Webhook request details:', {

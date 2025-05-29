@@ -37,7 +37,7 @@ const securityMiddleware = (app) => {
     app.use(cors({
         origin: allowedOrigins,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'Stripe-Signature'],
         credentials: true,
         maxAge: 86400 // 24 hours
     }));
