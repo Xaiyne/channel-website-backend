@@ -23,10 +23,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// IMPORTANT: Raw body handling for webhooks must be the first middleware after CORS
-app.use('/api/webhook/stripe', express.raw({ type: 'application/json' }));
-
-// Middleware
+// CORS middleware
 app.use(cors({
     origin: ['https://statsflow.online', 'http://localhost:443'],
     credentials: true,
@@ -34,11 +31,17 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'Stripe-Signature']
 }));
 
+// Body parsing middleware - only parse JSON for non-webhook routes
+app.use((req, res, next) => {
+    if (req.originalUrl === '/api/webhook/stripe') {
+        next(); // Skip body parsing for webhook route
+    } else {
+        express.json({ limit: '10kb' })(req, res, next); // Parse JSON for all other routes
+    }
+});
+
 // IMPORTANT: Webhook route must be registered BEFORE any body parsing middleware
 app.use('/api/webhook', webhookRoutes);
-
-// Regular JSON parsing for all other routes
-app.use(express.json({ limit: '10kb' }));
 
 // Security middleware
 securityMiddleware(app);
