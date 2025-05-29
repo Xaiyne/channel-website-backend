@@ -5,19 +5,22 @@ const User = require('../models/User');
 const logger = require('../utils/logger');
 
 // Stripe webhook endpoint
-router.post('/stripe', express.raw({type: 'application/json'}), async (req, res) => {
+router.post('/stripe', async (req, res) => {
     const sig = req.headers['stripe-signature'];
+    const rawBody = req.rawBody || req.body;
+    
     logger.info('Received webhook request', {
         signature: sig ? 'present' : 'missing',
         contentType: req.headers['content-type'],
-        bodyType: typeof req.body,
-        bodyLength: req.body ? req.body.length : 0
+        bodyType: typeof rawBody,
+        bodyLength: rawBody ? rawBody.length : 0,
+        rawBody: rawBody ? 'present' : 'missing'
     });
 
     let event;
     try {
         event = stripe.webhooks.constructEvent(
-            req.body,
+            rawBody,
             sig,
             process.env.STRIPE_WEBHOOK_SECRET
         );
@@ -29,7 +32,9 @@ router.post('/stripe', express.raw({type: 'application/json'}), async (req, res)
         logger.error('Webhook Error:', {
             message: err.message,
             signature: sig ? 'present' : 'missing',
-            webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ? 'set' : 'missing'
+            webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ? 'set' : 'missing',
+            bodyType: typeof rawBody,
+            bodyLength: rawBody ? rawBody.length : 0
         });
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
