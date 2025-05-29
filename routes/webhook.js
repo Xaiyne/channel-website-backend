@@ -8,24 +8,12 @@ const logger = require('../utils/logger');
 router.post('/stripe', async (req, res) => {
     const sig = req.headers['stripe-signature'];
     
-    // Get the raw body as a Buffer
-    const rawBody = await new Promise((resolve, reject) => {
-        const chunks = [];
-        req.on('data', (chunk) => {
-            chunks.push(chunk);
-        });
-        req.on('end', () => {
-            resolve(Buffer.concat(chunks));
-        });
-        req.on('error', (err) => reject(err));
-    });
-
     logger.info('Received webhook request', {
         signature: sig ? 'present' : 'missing',
         signatureValue: sig,
         contentType: req.headers['content-type'],
-        bodyLength: rawBody.length,
-        bodyIsBuffer: Buffer.isBuffer(rawBody),
+        bodyLength: req.body ? req.body.length : 0,
+        bodyIsBuffer: Buffer.isBuffer(req.body),
         headers: req.headers,
         url: req.originalUrl,
         method: req.method,
@@ -36,7 +24,7 @@ router.post('/stripe', async (req, res) => {
     let event;
     try {
         event = stripe.webhooks.constructEvent(
-            rawBody,
+            req.body,
             sig,
             process.env.STRIPE_WEBHOOK_SECRET
         );
@@ -50,8 +38,8 @@ router.post('/stripe', async (req, res) => {
             signature: sig ? 'present' : 'missing',
             signatureValue: sig,
             webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ? 'set' : 'missing',
-            bodyLength: rawBody.length,
-            bodyIsBuffer: Buffer.isBuffer(rawBody)
+            bodyLength: req.body ? req.body.length : 0,
+            bodyIsBuffer: Buffer.isBuffer(req.body)
         });
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
