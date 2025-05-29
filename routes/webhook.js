@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const logger = require('../utils/logger');
+const User = require('../models/User');
 
 // Stripe webhook endpoint - note: no /stripe in path since it's in the base route
 router.post('', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -51,9 +52,42 @@ router.post('', express.raw({ type: 'application/json' }), async (req, res) => {
                         logger.info('Checkout session completed', {
                             sessionId: data.id,
                             paymentStatus: data.payment_status,
-                            customerId: data.customer
+                            customerId: data.customer,
+                            metadata: data.metadata
                         });
-                        // TODO: Update user subscription status
+
+                        // Update user subscription status
+                        if (data.metadata && data.metadata.userId) {
+                            const user = await User.findById(data.metadata.userId);
+                            if (user) {
+                                // Determine subscription type based on price ID
+                                const priceId = data.line_items?.data[0]?.price?.id;
+                                let subscriptionType = 'none';
+                                
+                                if (priceId === 'price_1RSuKXL6G7tKq6vSssB7jpQM') {
+                                    subscriptionType = 'monthly';
+                                } else if (priceId === 'price_1RTZOWL6G7tKq6vSwY0SBVGa') {
+                                    subscriptionType = 'yearly';
+                                } else if (priceId === 'price_1RTcUZL6G7tKq6vSUaORxB2E') {
+                                    subscriptionType = 'test';
+                                }
+
+                                // Update user's subscription status
+                                user.subscriptionStatus = subscriptionType;
+                                user.subscriptionEndDate = new Date(data.expires_at * 1000);
+                                await user.save();
+
+                                logger.info('User subscription updated', {
+                                    userId: user._id,
+                                    subscriptionType,
+                                    endDate: user.subscriptionEndDate
+                                });
+                            } else {
+                                logger.error('User not found for subscription update', {
+                                    userId: data.metadata.userId
+                                });
+                            }
+                        }
                         break;
 
                     case 'payment_intent.succeeded':
