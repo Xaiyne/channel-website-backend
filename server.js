@@ -34,8 +34,14 @@ app.use(cors({
 // Special handling for Stripe webhooks - must be before any body parsing middleware
 app.use('/api/webhook/stripe', express.raw({ type: 'application/json' }));
 
-// Regular JSON parsing for all other routes
-app.use(express.json({ limit: '10kb' }));
+// Regular JSON parsing for all other routes with raw body preservation
+app.use(express.json({
+    verify: (req, res, buf) => {
+        if (req.originalUrl === '/api/webhook/stripe') {
+            req.rawBody = buf;
+        }
+    }
+}));
 
 // Security middleware
 securityMiddleware(app);

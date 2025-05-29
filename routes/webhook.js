@@ -12,13 +12,14 @@ router.post('/stripe', async (req, res) => {
         signature: sig ? 'present' : 'missing',
         contentType: req.headers['content-type'],
         bodyType: typeof req.body,
-        bodyLength: req.body ? req.body.length : 0
+        bodyLength: req.body ? req.body.length : 0,
+        rawBody: req.rawBody ? 'present' : 'missing'
     });
 
     let event;
     try {
         event = stripe.webhooks.constructEvent(
-            req.body,
+            req.rawBody || req.body,
             sig,
             process.env.STRIPE_WEBHOOK_SECRET
         );
@@ -32,7 +33,8 @@ router.post('/stripe', async (req, res) => {
             signature: sig ? 'present' : 'missing',
             webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ? 'set' : 'missing',
             bodyType: typeof req.body,
-            bodyLength: req.body ? req.body.length : 0
+            bodyLength: req.body ? req.body.length : 0,
+            rawBody: req.rawBody ? 'present' : 'missing'
         });
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
