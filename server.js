@@ -36,7 +36,7 @@ app.use(cors({
 
 // Body parsing middleware - only parse JSON for non-webhook routes
 app.use((req, res, next) => {
-    if (req.originalUrl === '/api/webhook/stripe') {
+    if (req.originalUrl === '/api/webhook') {
         next(); // Skip body parsing for webhook route
     } else {
         express.json({ limit: '10kb' })(req, res, next); // Parse JSON for all other routes
