@@ -31,17 +31,11 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'Stripe-Signature']
 }));
 
-// Special handling for Stripe webhooks
+// Special handling for Stripe webhooks - must be before any body parsing middleware
 app.use('/api/webhook/stripe', express.raw({ type: 'application/json' }));
 
 // Regular JSON parsing for all other routes
-app.use((req, res, next) => {
-    if (req.originalUrl === '/api/webhook/stripe') {
-        next();
-    } else {
-        express.json({ limit: '10kb' })(req, res, next);
-    }
-});
+app.use(express.json({ limit: '10kb' }));
 
 // Security middleware
 securityMiddleware(app);
