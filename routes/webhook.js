@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const stripe = require('/stripe')(process.env.STRIPE_SECRET_KEY);
 const logger = require('../utils/logger');
 
 // Stripe webhook endpoint - note: no /stripe in path since it's in the base route
