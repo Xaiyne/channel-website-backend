@@ -14,7 +14,7 @@ const webhookRoutes = require('./routes/webhook');
 const app = express();
 
 // IMPORTANT: Webhook route must be the FIRST route registered
-app.use('/api/webhook', webhookRoutes);
+app.use('/api/webhook/stripe', webhookRoutes);
 
 // Security headers middleware
 app.use((req, res, next) => {
@@ -36,7 +36,7 @@ app.use(cors({
 
 // Body parsing middleware - only parse JSON for non-webhook routes
 app.use((req, res, next) => {
-    if (req.originalUrl === '/api/webhook') {
+    if (req.originalUrl === '/api/webhook/stripe') {
         next(); // Skip body parsing for webhook route
     } else {
         express.json({ limit: '10kb' })(req, res, next); // Parse JSON for all other routes
