@@ -8,13 +8,15 @@ const logger = require('../utils/logger');
 router.post('/stripe', async (req, res) => {
     const sig = req.headers['stripe-signature'];
     
-    // Get the raw body directly from the request
+    // Get the raw body as a Buffer
     const rawBody = await new Promise((resolve, reject) => {
-        let data = '';
+        const chunks = [];
         req.on('data', (chunk) => {
-            data += chunk;
+            chunks.push(chunk);
         });
-        req.on('end', () => resolve(data));
+        req.on('end', () => {
+            resolve(Buffer.concat(chunks));
+        });
         req.on('error', (err) => reject(err));
     });
 
@@ -23,6 +25,7 @@ router.post('/stripe', async (req, res) => {
         signatureValue: sig,
         contentType: req.headers['content-type'],
         bodyLength: rawBody.length,
+        bodyIsBuffer: Buffer.isBuffer(rawBody),
         headers: req.headers,
         url: req.originalUrl,
         method: req.method,
@@ -47,7 +50,8 @@ router.post('/stripe', async (req, res) => {
             signature: sig ? 'present' : 'missing',
             signatureValue: sig,
             webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ? 'set' : 'missing',
-            bodyLength: rawBody.length
+            bodyLength: rawBody.length,
+            bodyIsBuffer: Buffer.isBuffer(rawBody)
         });
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
