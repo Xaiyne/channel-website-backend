@@ -13,6 +13,9 @@ const webhookRoutes = require('./routes/webhook');
 
 const app = express();
 
+// IMPORTANT: Webhook route must be the FIRST route registered
+app.use('/api/webhook', webhookRoutes);
+
 // Security headers middleware
 app.use((req, res, next) => {
     res.setHeader('X-Frame-Options', 'DENY');
@@ -39,9 +42,6 @@ app.use((req, res, next) => {
         express.json({ limit: '10kb' })(req, res, next); // Parse JSON for all other routes
     }
 });
-
-// IMPORTANT: Webhook route must be registered BEFORE any body parsing middleware
-app.use('/api/webhook', webhookRoutes);
 
 // Security middleware
 securityMiddleware(app);
