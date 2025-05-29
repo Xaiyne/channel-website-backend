@@ -28,7 +28,7 @@ app.use((req, res, next) => {
 
 // CORS middleware
 app.use(cors({
-    origin: ['https://statsflow.online', 'http://localhost:443'],
+    origin: ['https://api.statsflow.online', 'https://statsflow.online', 'http://localhost:443'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Stripe-Signature']
