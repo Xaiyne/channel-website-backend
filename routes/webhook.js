@@ -5,7 +5,7 @@ const User = require('../models/User');
 const logger = require('../utils/logger');
 
 // Stripe webhook endpoint
-router.post('/stripe', async (req, res) => {
+router.post('/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     
     logger.info('Received webhook request', {
