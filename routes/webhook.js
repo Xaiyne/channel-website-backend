@@ -4,30 +4,36 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const User = require('../models/User');
 const logger = require('../utils/logger');
 
-// Stripe webhook endpoint with raw body parsing
-router.post('/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+// Stripe webhook endpoint
+router.post('/stripe', async (req, res) => {
     const sig = req.headers['stripe-signature'];
     
+    // Get the raw body directly from the request
+    const rawBody = await new Promise((resolve, reject) => {
+        let data = '';
+        req.on('data', (chunk) => {
+            data += chunk;
+        });
+        req.on('end', () => resolve(data));
+        req.on('error', (err) => reject(err));
+    });
+
     logger.info('Received webhook request', {
         signature: sig ? 'present' : 'missing',
+        signatureValue: sig,
         contentType: req.headers['content-type'],
-        bodyLength: req.body ? req.body.length : 0,
+        bodyLength: rawBody.length,
         headers: req.headers,
         url: req.originalUrl,
         method: req.method,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ? 'set' : 'missing'
     });
-
-    // Log the first 100 characters of the body for debugging (safely)
-    if (req.body) {
-        const bodyPreview = req.body.toString().substring(0, 100);
-        logger.info('Webhook body preview:', { bodyPreview });
-    }
 
     let event;
     try {
         event = stripe.webhooks.constructEvent(
-            req.body,
+            rawBody,
             sig,
             process.env.STRIPE_WEBHOOK_SECRET
         );
@@ -39,8 +45,9 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
         logger.error('Webhook Error:', {
             message: err.message,
             signature: sig ? 'present' : 'missing',
+            signatureValue: sig,
             webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ? 'set' : 'missing',
-            bodyLength: req.body ? req.body.length : 0
+            bodyLength: rawBody.length
         });
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }

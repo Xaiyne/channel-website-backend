@@ -23,6 +23,9 @@ app.use((req, res, next) => {
     next();
 });
 
+// IMPORTANT: Raw body handling for webhooks must be the first middleware after CORS
+app.use('/api/webhook/stripe', express.raw({ type: 'application/json' }));
+
 // Middleware
 app.use(cors({
     origin: ['https://statsflow.online', 'http://localhost:443'],
