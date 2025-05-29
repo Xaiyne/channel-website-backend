@@ -4,22 +4,30 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const User = require('../models/User');
 const logger = require('../utils/logger');
 
-// Stripe webhook endpoint
-router.post('/stripe', async (req, res) => {
+// Stripe webhook endpoint with raw body parsing
+router.post('/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     
     logger.info('Received webhook request', {
         signature: sig ? 'present' : 'missing',
         contentType: req.headers['content-type'],
-        bodyType: typeof req.body,
         bodyLength: req.body ? req.body.length : 0,
-        rawBody: req.rawBody ? 'present' : 'missing'
+        headers: req.headers,
+        url: req.originalUrl,
+        method: req.method,
+        timestamp: new Date().toISOString()
     });
+
+    // Log the first 100 characters of the body for debugging (safely)
+    if (req.body) {
+        const bodyPreview = req.body.toString().substring(0, 100);
+        logger.info('Webhook body preview:', { bodyPreview });
+    }
 
     let event;
     try {
         event = stripe.webhooks.constructEvent(
-            req.rawBody || req.body,
+            req.body,
             sig,
             process.env.STRIPE_WEBHOOK_SECRET
         );
@@ -32,9 +40,7 @@ router.post('/stripe', async (req, res) => {
             message: err.message,
             signature: sig ? 'present' : 'missing',
             webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ? 'set' : 'missing',
-            bodyType: typeof req.body,
-            bodyLength: req.body ? req.body.length : 0,
-            rawBody: req.rawBody ? 'present' : 'missing'
+            bodyLength: req.body ? req.body.length : 0
         });
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }

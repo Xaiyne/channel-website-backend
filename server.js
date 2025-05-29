@@ -31,17 +31,11 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'Stripe-Signature']
 }));
 
-// Special handling for Stripe webhooks - must be before any body parsing middleware
-app.use('/api/webhook/stripe', express.raw({ type: 'application/json' }));
+// IMPORTANT: Webhook route must be registered BEFORE any body parsing middleware
+app.use('/api/webhook', webhookRoutes);
 
-// Regular JSON parsing for all other routes with raw body preservation
-app.use(express.json({
-    verify: (req, res, buf) => {
-        if (req.originalUrl === '/api/webhook/stripe') {
-            req.rawBody = buf;
-        }
-    }
-}));
+// Regular JSON parsing for all other routes
+app.use(express.json({ limit: '10kb' }));
 
 // Security middleware
 securityMiddleware(app);
@@ -85,7 +79,6 @@ mongoose.connect(process.env.MONGODB_URI, {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/subscription', subscriptionRoutes);
-app.use('/api/webhook', webhookRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
