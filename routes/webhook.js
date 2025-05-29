@@ -12,12 +12,25 @@ router.post('/stripe',
     async (req, res, next) => {
         const sig = req.headers['stripe-signature'];
         
-        logger.info('Verifying Stripe webhook', {
+        // Debug logging for request details
+        logger.info('Webhook request details:', {
             signature: sig ? 'present' : 'missing',
+            signatureValue: sig,
             contentType: req.headers['content-type'],
+            rawBodyExists: !!req.rawBody,
+            bodyExists: !!req.body,
             bodyLength: req.rawBody ? req.rawBody.length : 0,
-            bodyIsBuffer: Buffer.isBuffer(req.rawBody)
+            bodyIsBuffer: Buffer.isBuffer(req.rawBody),
+            headers: req.headers,
+            method: req.method,
+            url: req.originalUrl
         });
+
+        // Check if we have a raw body
+        if (!req.rawBody) {
+            logger.error('No raw body found in request');
+            return res.status(400).send('No webhook payload was provided.');
+        }
 
         try {
             // Verify the webhook signature using rawBody
@@ -40,8 +53,10 @@ router.post('/stripe',
             logger.error('Stripe webhook verification failed:', {
                 message: err.message,
                 signature: sig ? 'present' : 'missing',
+                signatureValue: sig,
                 bodyLength: req.rawBody ? req.rawBody.length : 0,
-                bodyIsBuffer: Buffer.isBuffer(req.rawBody)
+                bodyIsBuffer: Buffer.isBuffer(req.rawBody),
+                webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ? 'set' : 'missing'
             });
             
             return res.status(400).send(`Webhook Error: ${err.message}`);
