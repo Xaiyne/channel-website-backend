@@ -201,7 +201,8 @@ router.post('/create-checkout-session', auth, async (req, res) => {
             metadata: {
                 userId: user._id.toString(),
                 plan: plan
-            }
+            },
+            expand: ['line_items'],
         });
 
         console.log('Created checkout session:', session.id);

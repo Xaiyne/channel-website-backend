@@ -117,6 +117,39 @@ router.post('/login', loginLimiter, validateLogin, async (req, res) => {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
+        // Fetch latest subscription status from Stripe
+        if (user.stripeCustomerId) {
+            try {
+                const subscriptions = await require('stripe')(process.env.STRIPE_SECRET_KEY).subscriptions.list({
+                    customer: user.stripeCustomerId,
+                    status: 'active',
+                });
+                let latestStatus = 'none';
+                let latestPlan = 'none';
+                if (subscriptions.data.length > 0) {
+                    // Assume the first active subscription is the relevant one
+                    const sub = subscriptions.data[0];
+                    const priceId = sub.items.data[0]?.price?.id;
+                    if (priceId === 'price_1RSuKXL6G7tKq6vSssB7jpQM') {
+                        latestStatus = 'monthly';
+                        latestPlan = 'monthly';
+                    } else if (priceId === 'price_1RTZOWL6G7tKq6vSwY0SBVGa') {
+                        latestStatus = 'yearly';
+                        latestPlan = 'yearly';
+                    } else if (priceId === 'price_1RTcUZL6G7tKq6vSUaORxB2E') {
+                        latestStatus = 'lifetime';
+                        latestPlan = 'lifetime';
+                    }
+                }
+                user.subscriptionStatus = latestStatus;
+                user.planType = latestPlan;
+                await user.save();
+            } catch (stripeErr) {
+                // Log but do not block login
+                console.error('Error fetching Stripe subscription status:', stripeErr.message);
+            }
+        }
+
         // Generate token
         const token = jwt.sign(
             { userId: user._id },
