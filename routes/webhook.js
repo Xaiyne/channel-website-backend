@@ -69,7 +69,7 @@ router.post('', express.raw({ type: 'application/json' }), async (req, res) => {
                                 } else if (priceId === 'price_1RTZOWL6G7tKq6vSwY0SBVGa') {
                                     subscriptionType = 'yearly';
                                 } else if (priceId === 'price_1RTcUZL6G7tKq6vSUaORxB2E') {
-                                    subscriptionType = 'test';
+                                    subscriptionType = 'lifetime';
                                 }
 
                                 // Update user's subscription status
