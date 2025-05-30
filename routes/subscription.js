@@ -58,9 +58,29 @@ router.post('/create-subscription', auth, async (req, res) => {
             expand: ['latest_invoice.payment_intent'],
         });
 
-        // Update user subscription status
-        req.user.subscriptionStatus = priceId.includes('premium') ? 'premium' : 'basic';
-        req.user.subscriptionEndDate = new Date(subscription.current_period_end * 1000);
+        // Update user subscription status and related fields
+        let planType = 'none';
+        let subscriptionStatus = 'none';
+        if (priceId === 'price_1RSuKXL6G7tKq6vSssB7jpQM') {
+            planType = 'monthly';
+            subscriptionStatus = 'monthly';
+        } else if (priceId === 'price_1RTZOWL6G7tKq6vSwY0SBVGa') {
+            planType = 'yearly';
+            subscriptionStatus = 'yearly';
+        } else if (priceId === 'price_1RTcUZL6G7tKq6vSUaORxB2E') {
+            planType = 'lifetime';
+            subscriptionStatus = 'lifetime';
+        }
+        req.user.planType = planType;
+        req.user.subscriptionStatus = subscriptionStatus;
+        req.user.subscriptionStartDate = new Date();
+        req.user.lastPaymentDate = new Date();
+        req.user.stripeSubscriptionId = subscription.id;
+        if (planType === 'lifetime') {
+            req.user.subscriptionEndDate = null;
+        } else {
+            req.user.subscriptionEndDate = new Date(subscription.current_period_end * 1000);
+        }
         await req.user.save();
 
         res.json({
