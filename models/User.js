@@ -22,13 +22,30 @@ const userSchema = new mongoose.Schema({
     stripeCustomerId: {
         type: String
     },
+    stripeSubscriptionId: {
+        type: String,
+        default: null
+    },
     subscriptionStatus: {
         type: String,
-        enum: ['none', 'subscribed'],
+        enum: ['none', 'monthly', 'yearly', 'lifetime'],
         default: 'none'
+    },
+    planType: {
+        type: String,
+        enum: ['none', 'monthly', 'yearly', 'lifetime'],
+        default: 'none'
+    },
+    subscriptionStartDate: {
+        type: Date,
+        default: null
     },
     subscriptionEndDate: {
         type: Date
+    },
+    lastPaymentDate: {
+        type: Date,
+        default: null
     }
 }, {
     timestamps: true,
