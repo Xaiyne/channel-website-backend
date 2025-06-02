@@ -5,6 +5,15 @@ const Channel = require('../models/Channel');
 // Premium content endpoints
 router.get('/filter', async (req, res) => {
     try {
+        // Verify we're using the correct collection
+        if (Channel.collection.name !== 'channel-data-new') {
+            console.error('Wrong collection! Expected channel-data-new, got:', Channel.collection.name);
+            return res.status(500).json({ message: 'Database configuration error' });
+        }
+
+        console.log('Using collection:', Channel.collection.name);
+        console.log('Filter endpoint called with query:', req.query);
+
         const {
             minSubscribers,
             maxSubscribers,
@@ -41,6 +50,8 @@ router.get('/filter', async (req, res) => {
             filter.createdAt = { $gte: minDate };
         }
 
+        console.log('MongoDB filter:', JSON.stringify(filter, null, 2));
+
         // Build sort object
         const sort = {};
         sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
@@ -51,12 +62,23 @@ router.get('/filter', async (req, res) => {
 
         // Get total count for pagination
         const total = await Channel.countDocuments(filter);
+        console.log('Total matching documents:', total);
 
         // Get filtered channels
         const channels = await Channel.find(filter)
             .sort(sort)
             .skip(skip)
             .limit(limit);
+
+        console.log('Found channels:', channels.length);
+        if (channels.length > 0) {
+            console.log('Sample channel:', {
+                channelId: channels[0].channelId,
+                subscriberCount: channels[0].subscriberCount,
+                viewCount: channels[0].viewCount,
+                createdAt: channels[0].createdAt
+            });
+        }
 
         res.json({
             channels,
