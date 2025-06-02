@@ -28,7 +28,7 @@ const channelSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true,
-    collection: 'channel-data-new'
+    collection: 'channel_data_new'
 });
 
 module.exports = mongoose.model('Channel', channelSchema); 

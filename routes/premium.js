@@ -6,8 +6,8 @@ const Channel = require('../models/Channel');
 router.get('/filter', async (req, res) => {
     try {
         // Verify we're using the correct collection
-        if (Channel.collection.name !== 'channel-data-new') {
-            console.error('Wrong collection! Expected channel-data-new, got:', Channel.collection.name);
+        if (Channel.collection.name !== 'channel_data_new') {
+            console.error('Wrong collection! Expected channel_data_new, got:', Channel.collection.name);
             return res.status(500).json({ message: 'Database configuration error' });
         }
 
