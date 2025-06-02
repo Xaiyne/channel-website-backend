@@ -19,11 +19,7 @@ router.get('/filter', async (req, res) => {
         // Get a sample document to check field formats
         const sampleDoc = await Channel.findOne({});
         if (sampleDoc) {
-            console.log('Sample document fields:');
-            console.log('createdAt type:', typeof sampleDoc.createdAt);
-            console.log('createdAt value:', sampleDoc.createdAt);
-            console.log('subscriberCount type:', typeof sampleDoc.subscriberCount);
-            console.log('viewCount type:', typeof sampleDoc.viewCount);
+            console.log('Sample document structure:', JSON.stringify(sampleDoc.toObject(), null, 2));
         }
 
         // Verify we're using the correct collection
@@ -45,7 +41,7 @@ router.get('/filter', async (req, res) => {
             minViews,
             maxViews,
             maxAge,
-            sortBy = 'subscriberCount',
+            sortBy = 'subscriber_count',
             sortOrder = 'desc',
             page = 1
         } = req.query;
@@ -55,16 +51,16 @@ router.get('/filter', async (req, res) => {
 
         // Subscriber count filter
         if (minSubscribers || maxSubscribers) {
-            filter.subscriberCount = {};
-            if (minSubscribers) filter.subscriberCount.$gte = parseInt(minSubscribers);
-            if (maxSubscribers) filter.subscriberCount.$lte = parseInt(maxSubscribers);
+            filter.subscriber_count = {};
+            if (minSubscribers) filter.subscriber_count.$gte = parseInt(minSubscribers);
+            if (maxSubscribers) filter.subscriber_count.$lte = parseInt(maxSubscribers);
         }
 
         // View count filter
         if (minViews || maxViews) {
-            filter.viewCount = {};
-            if (minViews) filter.viewCount.$gte = parseInt(minViews);
-            if (maxViews) filter.viewCount.$lte = parseInt(maxViews);
+            filter.channel_views = {};
+            if (minViews) filter.channel_views.$gte = parseInt(minViews);
+            if (maxViews) filter.channel_views.$lte = parseInt(maxViews);
         }
 
         // Maximum age filter
@@ -73,7 +69,7 @@ router.get('/filter', async (req, res) => {
             const currentDate = new Date();
             const minDate = new Date(currentDate.getFullYear() - maxAgeInYears, currentDate.getMonth(), currentDate.getDate());
             console.log('Calculated minDate:', minDate);
-            filter.createdAt = { $gte: minDate };
+            filter.channel_creation_date = { $gte: minDate };
         }
 
         console.log('MongoDB filter:', JSON.stringify(filter, null, 2));
@@ -103,10 +99,10 @@ router.get('/filter', async (req, res) => {
         console.log('Found channels:', channels.length);
         if (channels.length > 0) {
             console.log('Sample channel:', {
-                channelId: channels[0].channelId,
-                subscriberCount: channels[0].subscriberCount,
-                viewCount: channels[0].viewCount,
-                createdAt: channels[0].createdAt
+                channel_id: channels[0].channel_id,
+                subscriber_count: channels[0].subscriber_count,
+                channel_views: channels[0].channel_views,
+                channel_creation_date: channels[0].channel_creation_date
             });
         }
 

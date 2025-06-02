@@ -1,28 +1,32 @@
 const mongoose = require('mongoose');
 
 const channelSchema = new mongoose.Schema({
-    channelId: {
+    channel_id: {
         type: String,
         required: true,
         unique: true
     },
-    subscriberCount: {
+    subscriber_count: {
         type: Number,
         required: true
     },
-    viewCount: {
+    channel_views: {
         type: Number,
         required: true
     },
-    createdAt: {
-        type: Date,
+    channel_videos: {
+        type: Number,
         required: true
     },
-    language: {
+    channel_country: {
         type: String,
         required: true
     },
-    lastUpdated: {
+    channel_creation_date: {
+        type: Date,
+        required: true
+    },
+    data_retrieved_at: {
         type: Date,
         required: true
     }
