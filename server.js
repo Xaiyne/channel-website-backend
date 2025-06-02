@@ -40,7 +40,7 @@ app.use((req, res, next) => {
     if (req.originalUrl === '/api/webhook/stripe') {
         next(); // Skip body parsing for webhook route
     } else {
-        express.json({ limit: '10kb' })(req, res, next); // Parse JSON for all other routes
+        express.json()(req, res, next); // Parse JSON for all other routes
     }
 });
 
