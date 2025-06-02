@@ -1,15 +1,30 @@
 const express = require('express');
 const router = express.Router();
 const Channel = require('../models/Channel');
+const mongoose = require('mongoose');
 
 // Premium content endpoints
 router.get('/filter', async (req, res) => {
     try {
+        // Log database connection details
+        console.log('MongoDB Connection Details:');
+        console.log('Database Name:', mongoose.connection.name);
+        console.log('Database Host:', mongoose.connection.host);
+        console.log('Connection State:', mongoose.connection.readyState);
+        
+        // List all collections in the database
+        const collections = await mongoose.connection.db.listCollections().toArray();
+        console.log('Available collections:', collections.map(c => c.name));
+
         // Verify we're using the correct collection
         if (Channel.collection.name !== 'channel_data_new') {
             console.error('Wrong collection! Expected channel_data_new, got:', Channel.collection.name);
             return res.status(500).json({ message: 'Database configuration error' });
         }
+
+        // Get total count of documents in the collection
+        const totalDocs = await Channel.countDocuments({});
+        console.log('Total documents in collection:', totalDocs);
 
         console.log('Using collection:', Channel.collection.name);
         console.log('Filter endpoint called with query:', req.query);
