@@ -6,6 +6,18 @@ const channelSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
+    channel_name: {
+        type: String,
+        required: true
+    },
+    channel_url: {
+        type: String,
+        required: true
+    },
+    channel_image_url: {
+        type: String,
+        required: true
+    },
     subscriber_count: {
         type: Number,
         required: true
