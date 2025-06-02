@@ -11,7 +11,6 @@ router.get('/filter', async (req, res) => {
             minViews,
             maxViews,
             maxAge,
-            language,
             sortBy = 'subscriberCount',
             sortOrder = 'desc',
             page = 1
@@ -40,11 +39,6 @@ router.get('/filter', async (req, res) => {
             const currentDate = new Date();
             const minDate = new Date(currentDate.getFullYear() - maxAgeInYears, currentDate.getMonth(), currentDate.getDate());
             filter.createdAt = { $gte: minDate };
-        }
-
-        // Language filter
-        if (language) {
-            filter.language = language;
         }
 
         // Build sort object
@@ -76,17 +70,6 @@ router.get('/filter', async (req, res) => {
     } catch (error) {
         console.error('Error in filter endpoint:', error);
         res.status(500).json({ message: 'Error accessing filter data' });
-    }
-});
-
-// Get available languages for filter
-router.get('/languages', async (req, res) => {
-    try {
-        const languages = await Channel.distinct('language');
-        res.json(languages);
-    } catch (error) {
-        console.error('Error fetching languages:', error);
-        res.status(500).json({ message: 'Error fetching available languages' });
     }
 });
 
