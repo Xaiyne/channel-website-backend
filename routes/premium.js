@@ -3,6 +3,7 @@ const router = express.Router();
 const Channel = require('../models/Channel');
 const mongoose = require('mongoose');
 const User = require('../models/User');
+const { auth } = require('../middleware/auth');
 
 // Constants for limits
 const MAX_RESULTS_PER_PAGE = 20;
@@ -156,13 +157,9 @@ router.get('/saved-channels', async (req, res) => {
 });
 
 // Add a channel to the user's saved channels
-router.post('/save-channel', async (req, res) => {
+router.post('/save-channel', auth, async (req, res) => {
     try {
-        // Assume authentication middleware sets req.user.id
-        const userId = req.user && req.user.id;
-        if (!userId) {
-            return res.status(401).json({ message: 'Unauthorized' });
-        }
+        const userId = req.user.id;
         const { channelId } = req.body;
         if (!channelId) {
             return res.status(400).json({ message: 'Channel ID is required' });
