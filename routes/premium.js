@@ -147,11 +147,30 @@ router.get('/trending', async (req, res) => {
     }
 });
 
-router.get('/saved-channels', async (req, res) => {
+// Get user's saved channels
+router.get('/saved-channels', auth, async (req, res) => {
     try {
-        // Add your saved channels data logic here
-        res.json({ message: 'Access granted to saved channels data' });
+        const userId = req.user.id;
+        
+        // Get user's saved channel IDs
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // If no saved channels, return empty array
+        if (!user.savedChannels || user.savedChannels.length === 0) {
+            return res.json({ channels: [] });
+        }
+
+        // Get full channel data for each saved channel
+        const channels = await Channel.find({
+            channel_id: { $in: user.savedChannels }
+        });
+
+        res.json({ channels });
     } catch (error) {
+        console.error('Error fetching saved channels:', error);
         res.status(500).json({ message: 'Error accessing saved channels data' });
     }
 });
