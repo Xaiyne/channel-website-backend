@@ -201,4 +201,32 @@ router.post('/save-channel', auth, async (req, res) => {
     }
 });
 
+// Remove a channel from user's saved channels
+router.delete('/saved-channels/:channelId', auth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { channelId } = req.params;
+
+        if (!channelId) {
+            return res.status(400).json({ message: 'Channel ID is required' });
+        }
+
+        // Remove channelId from user's savedChannels array
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { $pull: { savedChannels: channelId } },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json({ message: 'Channel removed successfully!' });
+    } catch (error) {
+        console.error('Error removing channel:', error);
+        res.status(500).json({ message: 'Error removing channel' });
+    }
+});
+
 module.exports = router; 
