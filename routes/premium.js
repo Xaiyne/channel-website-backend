@@ -17,8 +17,7 @@ router.get('/filter', async (req, res) => {
             maxSubscribers,
             minViews,
             maxViews,
-            minDate,
-            maxDate,
+            maxAge,
             language,
             sortBy = 'subscriberCount',
             sortOrder = 'desc',
@@ -42,11 +41,12 @@ router.get('/filter', async (req, res) => {
             if (maxViews) filter.viewCount.$lte = parseInt(maxViews);
         }
 
-        // Date range filter
-        if (minDate || maxDate) {
-            filter.createdAt = {};
-            if (minDate) filter.createdAt.$gte = new Date(minDate);
-            if (maxDate) filter.createdAt.$lte = new Date(maxDate);
+        // Maximum age filter
+        if (maxAge) {
+            const maxAgeInYears = parseInt(maxAge);
+            const currentDate = new Date();
+            const minDate = new Date(currentDate.getFullYear() - maxAgeInYears, currentDate.getMonth(), currentDate.getDate());
+            filter.createdAt = { $gte: minDate };
         }
 
         // Language filter
