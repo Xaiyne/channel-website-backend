@@ -41,40 +41,54 @@ router.get('/filter', async (req, res) => {
         console.log('Using collection:', Channel.collection.name);
         console.log('Filter endpoint called with query:', req.query);
 
-        const {
+        const allowedSortFields = ['subscriberCount', 'viewCount', 'createdAt'];
+        const allowedSortOrders = ['asc', 'desc'];
+
+        // Sanitize and validate query params
+        let {
             minSubscribers,
             maxSubscribers,
             minViews,
             maxViews,
             maxAge,
-            sortBy = 'subscriber_count',
+            sortBy = 'subscriberCount',
             sortOrder = 'desc',
             page = 1
         } = req.query;
+
+        // Only allow numbers for numeric fields
+        minSubscribers = minSubscribers && !isNaN(minSubscribers) ? parseInt(minSubscribers) : undefined;
+        maxSubscribers = maxSubscribers && !isNaN(maxSubscribers) ? parseInt(maxSubscribers) : undefined;
+        minViews = minViews && !isNaN(minViews) ? parseInt(minViews) : undefined;
+        maxViews = maxViews && !isNaN(maxViews) ? parseInt(maxViews) : undefined;
+        maxAge = maxAge && !isNaN(maxAge) ? parseInt(maxAge) : undefined;
+        page = page && !isNaN(page) ? parseInt(page) : 1;
+
+        // Only allow safe sort fields
+        if (!allowedSortFields.includes(sortBy)) sortBy = 'subscriberCount';
+        if (!allowedSortOrders.includes(sortOrder)) sortOrder = 'desc';
 
         // Build filter object
         const filter = {};
 
         // Subscriber count filter
-        if (minSubscribers || maxSubscribers) {
+        if (minSubscribers !== undefined || maxSubscribers !== undefined) {
             filter.subscriber_count = {};
-            if (minSubscribers) filter.subscriber_count.$gte = parseInt(minSubscribers);
-            if (maxSubscribers) filter.subscriber_count.$lte = parseInt(maxSubscribers);
+            if (minSubscribers !== undefined) filter.subscriber_count.$gte = minSubscribers;
+            if (maxSubscribers !== undefined) filter.subscriber_count.$lte = maxSubscribers;
         }
 
         // View count filter
-        if (minViews || maxViews) {
+        if (minViews !== undefined || maxViews !== undefined) {
             filter.channel_views = {};
-            if (minViews) filter.channel_views.$gte = parseInt(minViews);
-            if (maxViews) filter.channel_views.$lte = parseInt(maxViews);
+            if (minViews !== undefined) filter.channel_views.$gte = minViews;
+            if (maxViews !== undefined) filter.channel_views.$lte = maxViews;
         }
 
         // Maximum age filter
-        if (maxAge) {
-            const maxAgeInYears = parseInt(maxAge);
+        if (maxAge !== undefined) {
             const currentDate = new Date();
-            const minDate = new Date(currentDate.getFullYear() - maxAgeInYears, currentDate.getMonth(), currentDate.getDate());
-            console.log('Calculated minDate:', minDate);
+            const minDate = new Date(currentDate.getFullYear() - maxAge, currentDate.getMonth(), currentDate.getDate());
             filter.channel_creation_date = { $gte: minDate };
         }
 
