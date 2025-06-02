@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { auth, verifySubscription } = require('../middleware/auth');
+const Channel = require('../models/Channel');
 
 // Apply authentication middleware to all premium routes
 router.use(auth);
@@ -11,10 +12,88 @@ router.use(verifySubscription);
 // Premium content endpoints
 router.get('/filter', async (req, res) => {
     try {
-        // Add your filter data logic here
-        res.json({ message: 'Access granted to filter data' });
+        const {
+            minSubscribers,
+            maxSubscribers,
+            minViews,
+            maxViews,
+            minDate,
+            maxDate,
+            language,
+            sortBy = 'subscriberCount',
+            sortOrder = 'desc',
+            page = 1
+        } = req.query;
+
+        // Build filter object
+        const filter = {};
+
+        // Subscriber count filter
+        if (minSubscribers || maxSubscribers) {
+            filter.subscriberCount = {};
+            if (minSubscribers) filter.subscriberCount.$gte = parseInt(minSubscribers);
+            if (maxSubscribers) filter.subscriberCount.$lte = parseInt(maxSubscribers);
+        }
+
+        // View count filter
+        if (minViews || maxViews) {
+            filter.viewCount = {};
+            if (minViews) filter.viewCount.$gte = parseInt(minViews);
+            if (maxViews) filter.viewCount.$lte = parseInt(maxViews);
+        }
+
+        // Date range filter
+        if (minDate || maxDate) {
+            filter.createdAt = {};
+            if (minDate) filter.createdAt.$gte = new Date(minDate);
+            if (maxDate) filter.createdAt.$lte = new Date(maxDate);
+        }
+
+        // Language filter
+        if (language) {
+            filter.language = language;
+        }
+
+        // Build sort object
+        const sort = {};
+        sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+        // Calculate pagination
+        const limit = 20;
+        const skip = (parseInt(page) - 1) * limit;
+
+        // Get total count for pagination
+        const total = await Channel.countDocuments(filter);
+
+        // Get filtered channels
+        const channels = await Channel.find(filter)
+            .sort(sort)
+            .skip(skip)
+            .limit(limit);
+
+        res.json({
+            channels,
+            pagination: {
+                total,
+                page: parseInt(page),
+                pages: Math.ceil(total / limit),
+                limit
+            }
+        });
     } catch (error) {
+        console.error('Error in filter endpoint:', error);
         res.status(500).json({ message: 'Error accessing filter data' });
+    }
+});
+
+// Get available languages for filter
+router.get('/languages', async (req, res) => {
+    try {
+        const languages = await Channel.distinct('language');
+        res.json(languages);
+    } catch (error) {
+        console.error('Error fetching languages:', error);
+        res.status(500).json({ message: 'Error fetching available languages' });
     }
 });
 
