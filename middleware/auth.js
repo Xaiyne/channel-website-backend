@@ -43,4 +43,35 @@ const auth = async (req, res, next) => {
     }
 };
 
-module.exports = auth; 
+// Middleware to verify subscription status
+const verifySubscription = async (req, res, next) => {
+    try {
+        // First verify the user is authenticated
+        if (!req.user) {
+            return res.status(401).json({ message: 'Authentication required' });
+        }
+
+        // Check subscription status
+        const user = await User.findById(req.user.id);
+        if (!user || user.subscriptionStatus === 'none') {
+            return res.status(403).json({ message: 'Subscription required' });
+        }
+
+        // If subscription has an end date, check if it's still valid
+        if (user.subscriptionEndDate && new Date(user.subscriptionEndDate) < new Date()) {
+            user.subscriptionStatus = 'none';
+            await user.save();
+            return res.status(403).json({ message: 'Subscription expired' });
+        }
+
+        next();
+    } catch (error) {
+        console.error('Subscription verification error:', error);
+        res.status(500).json({ message: 'Error verifying subscription' });
+    }
+};
+
+module.exports = {
+    auth,
+    verifySubscription
+}; 
