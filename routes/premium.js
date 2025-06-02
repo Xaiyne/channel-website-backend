@@ -3,6 +3,10 @@ const router = express.Router();
 const Channel = require('../models/Channel');
 const mongoose = require('mongoose');
 
+// Constants for limits
+const MAX_RESULTS_PER_PAGE = 20;
+const MAX_TOTAL_RESULTS = 50;  // Hard limit on total results
+
 // Premium content endpoints
 router.get('/filter', async (req, res) => {
     try {
@@ -82,15 +86,16 @@ router.get('/filter', async (req, res) => {
         const sort = {};
         sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
-        // Calculate pagination
-        const limit = 20;
-        const skip = (parseInt(page) - 1) * limit;
+        // Calculate pagination with hard limits
+        const limit = Math.min(MAX_RESULTS_PER_PAGE, parseInt(req.query.limit) || MAX_RESULTS_PER_PAGE);
+        const pageNum = Math.min(Math.max(1, parseInt(page)), Math.ceil(MAX_TOTAL_RESULTS / limit));
+        const skip = (pageNum - 1) * limit;
 
-        // Get total count for pagination
-        const total = await Channel.countDocuments(filter);
-        console.log('Total matching documents:', total);
+        // Get total count for pagination (capped at MAX_TOTAL_RESULTS)
+        const total = Math.min(await Channel.countDocuments(filter), MAX_TOTAL_RESULTS);
+        console.log('Total matching documents (capped):', total);
 
-        // Get filtered channels
+        // Get filtered channels with hard limit
         const channels = await Channel.find(filter)
             .sort(sort)
             .skip(skip)
@@ -110,9 +115,10 @@ router.get('/filter', async (req, res) => {
             channels,
             pagination: {
                 total,
-                page: parseInt(page),
+                page: pageNum,
                 pages: Math.ceil(total / limit),
-                limit
+                limit,
+                hasMore: total > MAX_TOTAL_RESULTS
             }
         });
     } catch (error) {
