@@ -52,7 +52,7 @@ const verifySubscription = async (req, res, next) => {
         }
 
         // Check subscription status
-        const user = await User.findById(req.user.id);
+        const user = await User.findById(req.user._id);
         if (!user || user.subscriptionStatus === 'none') {
             return res.status(403).json({ message: 'Subscription required' });
         }
