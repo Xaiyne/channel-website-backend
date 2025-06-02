@@ -1,13 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { auth, verifySubscription } = require('../middleware/auth');
 const Channel = require('../models/Channel');
-
-// Apply authentication middleware to all premium routes
-router.use(auth);
-
-// Apply subscription verification middleware to all premium routes
-router.use(verifySubscription);
 
 // Premium content endpoints
 router.get('/filter', async (req, res) => {
