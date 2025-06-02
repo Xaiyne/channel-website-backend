@@ -78,22 +78,27 @@ router.get('/filter', async (req, res) => {
 
         console.log('MongoDB filter:', JSON.stringify(filter, null, 2));
 
-        // Try a simpler filter first to verify data exists
-        const simpleFilter = await Channel.find({}).limit(1);
-        console.log('Simple filter result:', simpleFilter.length > 0 ? 'Found documents' : 'No documents');
+        // Map frontend sort fields to database fields
+        const sortFieldMap = {
+            'subscriberCount': 'subscriber_count',
+            'viewCount': 'channel_views',
+            'createdAt': 'channel_creation_date'
+        };
 
         // Build sort object
         const sort = {};
-        sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+        const dbSortField = sortFieldMap[sortBy] || 'subscriber_count';
+        sort[dbSortField] = sortOrder === 'desc' ? -1 : 1;
+        console.log('Sort configuration:', sort);
+
+        // First, get the total count of matching documents (no limit)
+        const totalMatching = await Channel.countDocuments(filter);
+        console.log('Total matching documents (before limit):', totalMatching);
 
         // Calculate pagination with hard limits
         const limit = Math.min(MAX_RESULTS_PER_PAGE, parseInt(req.query.limit) || MAX_RESULTS_PER_PAGE);
         const pageNum = Math.min(Math.max(1, parseInt(page)), Math.ceil(MAX_TOTAL_RESULTS / limit));
         const skip = (pageNum - 1) * limit;
-
-        // Get total count for pagination (capped at MAX_TOTAL_RESULTS)
-        const total = Math.min(await Channel.countDocuments(filter), MAX_TOTAL_RESULTS);
-        console.log('Total matching documents (capped):', total);
 
         // Get filtered channels with hard limit
         const channels = await Channel.find(filter)
@@ -111,6 +116,9 @@ router.get('/filter', async (req, res) => {
             });
         }
 
+        // Calculate the total to return (capped at MAX_TOTAL_RESULTS)
+        const total = Math.min(totalMatching, MAX_TOTAL_RESULTS);
+
         res.json({
             channels,
             pagination: {
@@ -118,7 +126,8 @@ router.get('/filter', async (req, res) => {
                 page: pageNum,
                 pages: Math.ceil(total / limit),
                 limit,
-                hasMore: total > MAX_TOTAL_RESULTS
+                hasMore: totalMatching > MAX_TOTAL_RESULTS,
+                totalMatching // Include the actual total for reference
             }
         });
     } catch (error) {
