@@ -46,7 +46,10 @@ const userSchema = new mongoose.Schema({
     lastPaymentDate: {
         type: Date,
         default: null
-    }
+    },
+    savedChannels: [{
+        type: String
+    }]
 }, {
     timestamps: true,
     collection: 'users'  // Explicitly set collection name to 'users'

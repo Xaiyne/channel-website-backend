@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Channel = require('../models/Channel');
 const mongoose = require('mongoose');
+const User = require('../models/User');
 
 // Constants for limits
 const MAX_RESULTS_PER_PAGE = 20;
@@ -151,6 +152,36 @@ router.get('/saved-channels', async (req, res) => {
         res.json({ message: 'Access granted to saved channels data' });
     } catch (error) {
         res.status(500).json({ message: 'Error accessing saved channels data' });
+    }
+});
+
+// Add a channel to the user's saved channels
+router.post('/save-channel', async (req, res) => {
+    try {
+        // Assume authentication middleware sets req.user.id
+        const userId = req.user && req.user.id;
+        if (!userId) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+        const { channelId } = req.body;
+        if (!channelId) {
+            return res.status(400).json({ message: 'Channel ID is required' });
+        }
+        // Check if the channel exists
+        const channel = await Channel.findOne({ channel_id: channelId });
+        if (!channel) {
+            return res.status(404).json({ message: 'Channel not found' });
+        }
+        // Add channelId to user's savedChannels array if not already present
+        await User.findByIdAndUpdate(
+            userId,
+            { $addToSet: { savedChannels: channelId } },
+            { new: true }
+        );
+        res.json({ message: 'Channel saved successfully!' });
+    } catch (error) {
+        console.error('Error saving channel:', error);
+        res.status(500).json({ message: 'Error saving channel' });
     }
 });
 
