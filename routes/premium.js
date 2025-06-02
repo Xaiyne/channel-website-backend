@@ -16,6 +16,16 @@ router.get('/filter', async (req, res) => {
         const collections = await mongoose.connection.db.listCollections().toArray();
         console.log('Available collections:', collections.map(c => c.name));
 
+        // Get a sample document to check field formats
+        const sampleDoc = await Channel.findOne({});
+        if (sampleDoc) {
+            console.log('Sample document fields:');
+            console.log('createdAt type:', typeof sampleDoc.createdAt);
+            console.log('createdAt value:', sampleDoc.createdAt);
+            console.log('subscriberCount type:', typeof sampleDoc.subscriberCount);
+            console.log('viewCount type:', typeof sampleDoc.viewCount);
+        }
+
         // Verify we're using the correct collection
         if (Channel.collection.name !== 'channel_data_new') {
             console.error('Wrong collection! Expected channel_data_new, got:', Channel.collection.name);
@@ -62,10 +72,15 @@ router.get('/filter', async (req, res) => {
             const maxAgeInYears = parseInt(maxAge);
             const currentDate = new Date();
             const minDate = new Date(currentDate.getFullYear() - maxAgeInYears, currentDate.getMonth(), currentDate.getDate());
+            console.log('Calculated minDate:', minDate);
             filter.createdAt = { $gte: minDate };
         }
 
         console.log('MongoDB filter:', JSON.stringify(filter, null, 2));
+
+        // Try a simpler filter first to verify data exists
+        const simpleFilter = await Channel.find({}).limit(1);
+        console.log('Simple filter result:', simpleFilter.length > 0 ? 'Found documents' : 'No documents');
 
         // Build sort object
         const sort = {};
