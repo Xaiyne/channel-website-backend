@@ -3,14 +3,14 @@ const router = express.Router();
 const Channel = require('../models/Channel');
 const mongoose = require('mongoose');
 const User = require('../models/User');
-const { auth } = require('../middleware/auth');
+const { auth, verifySubscription } = require('../middleware/auth');
 
 // Constants for limits
 const MAX_RESULTS_PER_PAGE = 20;
 const MAX_TOTAL_RESULTS = 50;  // Hard limit on total results
 
 // Premium content endpoints
-router.get('/filter', async (req, res) => {
+router.get('/filter', auth, verifySubscription, async (req, res) => {
     try {
         // Log database connection details
         console.log('MongoDB Connection Details:');
@@ -162,7 +162,7 @@ router.get('/trending', async (req, res) => {
 });
 
 // Get user's saved channels
-router.get('/saved-channels', auth, async (req, res) => {
+router.get('/saved-channels', auth, verifySubscription, async (req, res) => {
     try {
         const userId = req.user.id;
         
