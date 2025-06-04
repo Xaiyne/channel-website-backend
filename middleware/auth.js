@@ -31,7 +31,8 @@ const verifySubscription = async (req, res, next) => {
             return res.status(401).json({ message: 'Authentication required' });
         }
 
-        if (req.user.subscriptionStatus === 'none') {
+        const validSubscriptions = ['monthly', 'yearly', 'lifetime'];
+        if (!validSubscriptions.includes(req.user.subscriptionStatus)) {
             return res.status(403).json({ message: 'Subscription required' });
         }
 
